@@ -1,0 +1,198 @@
+# ============================================================================
+# PrintSplit - default settings
+# ----------------------------------------------------------------------------
+# Every knob the tool has is listed here with its default value. A project
+# config starts with `extends = "default.toml"` and then only states what it
+# changes. Unknown keys are rejected, so a typo cannot silently ruin a print.
+#
+# All lengths are millimetres unless the key says otherwise.
+# ============================================================================
+
+
+# ---------------------------------------------------------------- project ---
+[project]
+name = "Untitled"          # shown on every sheet and on the assembly map
+input = ""                 # REQUIRED: source PDF, relative to the repo root
+page = 1                   # 1-based page number of the source PDF
+output_dir = "out"         # where the results are written
+output_basename = "tiled"  # <basename>.pdf, <basename>_assembly_map.pdf, ...
+root = ""                  # override the root used to resolve relative paths
+
+
+# ------------------------------------------------------------------ scale ---
+# The drawing is at 1:source_scale and is to be printed at 1:target_scale.
+# The PDF is magnified by source_scale / target_scale.
+#   1:60 drawing printed 1:1   -> source_scale = 60, target_scale = 1  (x60)
+#   1:60 drawing printed 1:10  -> source_scale = 60, target_scale = 10 (x6)
+#   already full size, just too big for one sheet -> both = 1 (x1)
+[scale]
+source_scale = 1.0
+target_scale = 1.0
+
+
+# ----------------------------------------------------------------- source ---
+# Which part of the source page gets tiled.
+[source]
+bbox_mode = "auto"          # auto = bounding box of the artwork
+                            # page = the whole page
+                            # manual = manual_bbox_mm below
+include_drawings = true     # count vector paths when computing the bbox
+include_text = true         # count text blocks
+include_images = true       # count raster images
+stroke_aware = true         # grow vector boxes by half the stroke width
+drop_page_frame = false     # ignore items that span (nearly) the whole page,
+                            # i.e. a drawn sheet border you do not want tiled
+page_frame_tolerance_mm = 3.0
+manual_bbox_mm = []         # [x0, y0, x1, y1] on the source page, mm from the
+                            # top-left corner, used when bbox_mode = "manual"
+padding_mm = 0.0            # blank margin around the drawing, in PRINTED mm
+round_up_to_mm = 0.0        # round the assembled size up to a multiple of this
+
+
+# ------------------------------------------------------------------ lines ---
+# How thick the drawing's own strokes come out.
+#
+# Magnifying a drawing magnifies its line weights too: at x60, a 0.72 pt line
+# (a normal CAD line) prints 15 mm wide. That is not just ugly, it is imprecise
+# - a 15 mm wide line is a 15 mm wide answer to "where does this edge go?".
+#
+# All widths below are in PRINTED millimetres: what a ruler on the paper reads.
+#   mode = "keep"   leave the weights alone (they scale with the drawing)
+#   mode = "fixed"  every stroke comes out width_mm wide
+#   mode = "scale"  keep the drawing's relative weights, multiplied by scale
+# min/max clamp the result in any mode, so `keep` + max_width_mm = 1.0 keeps the
+# hierarchy but caps the fat ones.
+[lines]
+mode = "keep"
+scale = 1.0
+width_mm = 0.5
+min_width_mm = 0.0          # 0 = no floor
+max_width_mm = 0.0          # 0 = no ceiling
+keep_hairlines = true       # leave zero-width (device hairline) strokes alone
+
+
+# ------------------------------------------------------------------ sheet ---
+[sheet]
+size = "A0"                 # A0..A5, 2A0, 4A0, B0..B2, LETTER, LEGAL,
+                            # ARCH_D, ARCH_E, or "custom"
+orientation = "auto"        # auto picks whichever needs fewer sheets
+custom_size_mm = []         # [width, height] when size = "custom"
+margin_mm = 10.0            # non-printable border. A number, or
+                            # [vertical, horizontal], or [top, right, bottom, left]
+
+
+# ----------------------------------------------------------------- tiling ---
+[tiling]
+overlap_mm = 20.0           # band shared by neighbouring sheets
+center_content = true       # spread the leftover paper evenly around the drawing
+skip_blank_tiles = true     # do not print sheets that would come out empty
+label_style = "A1"          # A1 | R1C1 | index
+page_order = "row_major"    # row_major | column_major
+max_sheets = 200            # safety net against a mis-typed scale
+
+
+# ------------------------------------------------------------------ marks ---
+[marks]
+enabled = true
+font = "helv"               # helv | hebo | cour | tiro (PDF base 14)
+
+[marks.frame]               # outline of the printable area
+enabled = true
+color = "#9aa4ae"
+line_width_mm = 0.2
+
+[marks.crop]                # corner ticks
+enabled = true
+length_mm = 15.0
+color = "#000000"
+line_width_mm = 0.3
+
+[marks.cut]                 # "cut here" on the left/top edges with a neighbour
+enabled = true
+color = "#d1242f"
+line_width_mm = 0.35
+dash = "6 4"
+label = true
+font_size_pt = 9.0
+
+[marks.overlap]             # the shared band
+enabled = true
+color = "#9aa4ae"
+line_width_mm = 0.25
+dash = "2 4"
+shade = true
+shade_color = "#eef3f8"
+
+[marks.registration]        # crosshairs on identical real-world coordinates
+enabled = true
+spacing_mm = 200.0          # along the joint, in assembled mm
+size_mm = 16.0
+line_width_mm = 0.3
+color = "#1f6feb"
+circle = true
+circle_radius_mm = 5.0
+corner_targets = true       # bigger target where four sheets meet
+label = true                # write the assembled coordinate next to each cross
+font_size_pt = 6.0
+
+[marks.ticks]               # scale along the top and left frame
+enabled = true
+step_mm = 100.0
+length_mm = 4.0
+long_every = 5              # every n-th tick is longer and labelled
+units = "m"                 # m | cm | mm
+font_size_pt = 7.0
+color = "#5a6672"
+line_width_mm = 0.2
+
+[marks.ruler]               # printed ruler: proof the printer did not rescale
+enabled = true
+corner = "auto"             # auto = the emptiest free corner of each sheet
+offset_mm = 16.0
+length_mm = 500.0
+division_mm = 100.0
+height_mm = 7.0
+font_size_pt = 9.0
+color = "#000000"
+line_width_mm = 0.3
+both_axes = true            # also a vertical one, to catch anisotropic scaling
+
+[marks.label]               # the info panel
+enabled = true
+corner = "auto"             # auto | top_left | top_right | bottom_left | bottom_right
+offset_mm = 14.0
+font_size_pt = 11.0
+title_font_size_pt = 40.0
+color = "#000000"
+background = true
+background_color = "#ffffff"
+border = true
+border_color = "#9aa4ae"
+show_neighbours = true
+notes = "PRINT AT 100% - DO NOT USE FIT TO PAGE"
+
+[marks.arrows]              # "-> B2" hints near each edge
+enabled = true
+font_size_pt = 13.0
+color = "#1f6feb"
+
+
+# --------------------------------------------------------------- overview ---
+[overview]
+enabled = true
+separate_file = true        # keep the tile PDF single-page-size for the plotter
+size = "A3"
+orientation = "auto"
+margin_mm = 14.0
+font_size_pt = 9.0
+grid_color = "#1f6feb"
+blank_color = "#c9d1d9"
+drawing_color = "#24292f"
+
+
+# ----------------------------------------------------------------- output ---
+[output]
+single_pdf = true           # one multi-page PDF with every sheet
+per_tile_pdfs = false       # plus one file per sheet
+report = true               # <basename>_report.txt
+overwrite = true

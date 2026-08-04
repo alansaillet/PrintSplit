@@ -1,0 +1,22 @@
+# Your drawings and their output stay out of the repo.
+# Put jobs in projects/<name>/ and configs in config/<name>.toml.
+projects/
+examples/out/
+out/
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.vscode/
+.idea/
+.DS_Store
+
+# harness settings
+.claude/
