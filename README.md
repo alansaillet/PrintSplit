@@ -102,14 +102,32 @@ for the plotter), `<basename>_assembly_map.pdf`, and `<basename>_report.txt`.
 
 ### Where things live
 
+Your drawings are yours; keep them out of the tool. Each job is a folder
+holding the drawing, its `.toml` and its `out/` — self-contained, so it can be
+moved, archived or backed up whole.
+
 ```
-config/          shipped defaults and the example - part of the repo
-projects/        your drawings, configs and output - git-ignored
+PrintSplit/              the tool (this repo)
+└── config/              shipped defaults and the example
+PrintSplit-Projects/     your jobs - a sibling folder, nothing to do with the repo
+├── bridge/
+│   ├── deck.pdf
+│   ├── deck.toml
+│   └── out/
+└── foundation/
 ```
 
-Keep each job in its own folder: the drawing, its `.toml`, and `out/`. Nothing
-of yours ends up in the repo, and a project folder can be moved or archived
-whole.
+Point the tool at them once:
+
+```bash
+setx PRINTSPLIT_PROJECTS "C:\path\to\PrintSplit-Projects"   # Windows
+export PRINTSPLIT_PROJECTS=~/PrintSplit-Projects            # macOS / Linux
+```
+
+after which `--all` finds them. Or say so per run with
+`--projects DIR` (repeatable), or just name the config directly. A `projects/`
+folder beside the tool also works and is git-ignored, if you would rather keep
+everything in one place.
 
 ---
 

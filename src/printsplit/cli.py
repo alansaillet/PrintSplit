@@ -39,8 +39,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--all",
         action="store_true",
-        help=f"run every job config in {CONFIG_DIR}/ and {PROJECTS_DIR}/*/ "
-        f"(bases without a project.input are skipped)",
+        help="run every job config found in config/ and in every project folder "
+        "(bases without a project.input are skipped)",
+    )
+    parser.add_argument(
+        "--projects",
+        metavar="DIR",
+        action="append",
+        help=f"a folder of jobs to search, repeatable. Also settable with the "
+        f"{ENV_PROJECTS} environment variable",
     )
     parser.add_argument(
         "--new",
@@ -101,18 +108,45 @@ def _is_job(path: Path) -> bool:
     return bool(raw.get("project", {}).get("input"))
 
 
-def discover_configs(root: Path | None = None) -> list[Path]:
-    """Every runnable job config: the shipped ones, plus everything in projects/."""
-    root = root or _repo_root()
-    found = sorted((root / CONFIG_DIR).glob("*.toml"))
-    found += sorted((root / PROJECTS_DIR).glob("*/*.toml"))
-    return [p for p in found if _is_job(p)]
+ENV_PROJECTS = "PRINTSPLIT_PROJECTS"
+
+
+def project_roots(extra: list[str] | None = None) -> list[Path]:
+    """Folders to search for jobs.
+
+    Job data is yours, not the tool's, and normally lives outside the repo.
+    Point at it with ``--projects DIR`` (repeatable) or the
+    ``PRINTSPLIT_PROJECTS`` environment variable (os.pathsep-separated). A
+    ``projects/`` folder beside the tool is always included when it exists.
+    """
+    import os
+
+    roots = [_repo_root() / PROJECTS_DIR]
+    roots += [
+        Path(p) for p in os.environ.get(ENV_PROJECTS, "").split(os.pathsep) if p.strip()
+    ]
+    roots += [Path(p) for p in (extra or [])]
+    seen, unique = set(), []
+    for root in roots:
+        if root.is_dir() and root.resolve() not in seen:
+            seen.add(root.resolve())
+            unique.append(root)
+    return unique
+
+
+def discover_configs(extra_project_dirs: list[str] | None = None) -> list[Path]:
+    """Every runnable job config: the shipped ones, plus every project folder."""
+    found = sorted((_repo_root() / CONFIG_DIR).glob("*.toml"))
+    for root in project_roots(extra_project_dirs):
+        found += sorted(root.glob("*.toml"))  # a folder holding a single job
+        found += sorted(root.glob("*/*.toml"))  # a folder of job folders
+    return [p for p in dict.fromkeys(found) if _is_job(p)]
 
 
 def resolve_configs(args) -> list[Path]:
     paths: list[Path] = []
     if args.all:
-        paths += discover_configs()
+        paths += discover_configs(getattr(args, "projects", None))
     for pattern in args.config:
         if any(ch in pattern for ch in "*?["):
             matched = sorted(Path().glob(pattern))
