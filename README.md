@@ -2,6 +2,8 @@
 
 **Tile a scaled drawing across large sheets, precisely.**
 
+![One A4 drawing at 1:20 becoming six A0 sheets at 1:1, with cut lines, registration crosshairs and a sheet identity panel](docs/hero.png)
+
 You have a PDF drawn at 1:50. You want it on the floor at 1:1, and it is four
 metres wide. PrintSplit magnifies it exactly, splits it across overlapping A0
 sheets, and prints the cut lines, registration crosshairs, coordinate grid and
@@ -14,6 +16,11 @@ pip install -r requirements.txt
 python examples/make_sample_drawing.py     # a synthetic 1:20 drawing
 python printsplit.py config/example.toml   # -> 6 A0 sheets at 1:1
 ```
+
+> The picture above is the actual output of those three commands — the drawing,
+> the sheets and the close-ups all come straight from
+> [`examples/make_hero_image.py`](examples/make_hero_image.py), so it cannot
+> drift away from what the tool really does.
 
 ---
 
@@ -302,8 +309,11 @@ printsplit.py               run from a checkout, no install needed
 config/
 ├── default.toml            every setting, documented
 └── example.toml            the example job
+docs/
+└── hero.png                the picture above - regenerated, never hand-made
 examples/
 ├── make_sample_drawing.py  generates the sample
+├── make_hero_image.py      builds docs/hero.png from real output
 └── sample_drawing.pdf      a synthetic 1:20 drawing
 src/printsplit/
 ├── cli.py                  argument parsing, scaffolding, batch runs

@@ -26,7 +26,7 @@ source_scale = 20.0   # the drawing is 1:20
 target_scale = 1.0    # print it full size
 
 [source]
-padding_mm = 40.0     # clear paper around the drawing, at print scale
+padding_mm = 20.0     # clear paper around the drawing, at print scale
 
 [lines]
 # Untouched, a 0.6 pt CAD line would print 12 mm wide at x20. Thin lines are
