@@ -400,16 +400,22 @@ def load(config_path: str | Path, _seen: set[Path] | None = None) -> Config:
     return cfg
 
 
-def from_dict(data: dict) -> Config:
-    """Build a validated :class:`Config` from plain nested dicts.
+def from_dict(data: dict, validate_it: bool = True) -> Config:
+    """Build a :class:`Config` from plain nested dicts.
 
     The counterpart of :func:`to_dict`, and the way a GUI should hand settings
     over: unknown keys and bad values raise :class:`ConfigError` here rather
     than surfacing as a broken print later.
+
+    Pass ``validate_it=False`` to build a config that is not complete yet -- a
+    form with no drawing chosen, say. Unknown keys and wrong types are still
+    rejected; only the "is this runnable" rules are deferred. Call
+    :func:`validate` when the user is ready.
     """
     cfg = _build(Config, data)
     cfg.root = Path(cfg.project.root).resolve() if cfg.project.root else Path.cwd()
-    validate(cfg)
+    if validate_it:
+        validate(cfg)
     return cfg
 
 

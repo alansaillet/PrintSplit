@@ -45,6 +45,7 @@ __all__ = [
     "from_dict",
     "to_dict",
     "dump_config",
+    "validate_config",
     "PAPER_SIZES_MM",
     # running a job
     "Job",
@@ -62,7 +63,8 @@ __all__ = [
 
 def __getattr__(name: str):
     """Import the heavy parts (PyMuPDF) only when they are actually used."""
-    if name in ("Config", "load_config", "from_dict", "to_dict", "dump_config"):
+    if name in ("Config", "load_config", "from_dict", "to_dict", "dump_config",
+                "validate_config"):
         from . import config as _config
 
         return {
@@ -71,6 +73,7 @@ def __getattr__(name: str):
             "from_dict": _config.from_dict,
             "to_dict": _config.to_dict,
             "dump_config": _config.dump,
+            "validate_config": _config.validate,
         }[name]
     if name == "PAPER_SIZES_MM":
         from .units import PAPER_SIZES_MM

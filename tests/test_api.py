@@ -76,6 +76,27 @@ def test_checks_run_on_a_planned_job():
     assert all(f.check and f.message for f in findings)
 
 
+def test_partial_config_for_a_form_with_nothing_chosen_yet():
+    """A GUI must be able to hold an incomplete config before the user picks a file."""
+    cfg = printsplit.from_dict({"project": {"input": ""}}, validate_it=False)
+    assert cfg.project.input == ""
+    # still type-checked: a typo or a wrong type is rejected even when deferred
+    for bad in ({"nope": {}}, {"scale": {"source_scale": "fifty"}}):
+        try:
+            printsplit.from_dict(bad, validate_it=False)
+        except printsplit.ConfigError:
+            pass
+        else:  # pragma: no cover
+            raise AssertionError(f"expected ConfigError for {bad}")
+    # and the deferred rules fire when asked
+    try:
+        printsplit.validate_config(cfg)
+    except printsplit.ConfigError as exc:
+        assert "input" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("expected validate_config to reject an empty input")
+
+
 def test_missing_source_raises_source_error():
     cfg = printsplit.from_dict({"project": {"input": "does/not/exist.pdf"}})
     try:
